@@ -1,0 +1,129 @@
+import ij.IJ;
+
+import java.util.Arrays;
+
+public class Code {
+	
+	public ImageAccess erodeBug(ImageAccess image) {
+		boolean b[][] = square(3);
+		for (int x=0; x<image.nx; x++)
+		for (int y=0; y<image.nx; y++) {
+			double[][] block = image.getNeighborhood(x, y, 3, 3);
+			double min = Double.MAX_VALUE;
+			for (int k=0; k<3; k++)
+			for (int l=0; l<3; l++) {
+				if (b[k][l] == true)
+					min = Math.min(block[k][l], min);
+			}
+			image.putPixel(x, y, min);
+		}
+		return image;	
+	}
+	
+	public boolean[][] square(int size) {
+		boolean b[][]= new boolean[size][size];
+		for (int x = 0; x < size; x++)
+		for (int y = 0; y < size; y++)
+			b[x][y] = true;
+		return b;
+	}
+	
+	public boolean[][] shift(int size) {
+		boolean b[][] = new boolean[size][size];
+		// TODO: Add your code here
+		return b; // TODO: change the return value	
+	}
+	
+	public boolean[][] cross(int size) {
+		boolean b[][] = new boolean[size][size];
+		// TODO: Add your code here
+		return b; // TODO: change the return value	
+	}
+	
+	public boolean[][] disk(int size) {
+		boolean b[][] = new boolean[size][size];
+		// TODO: Add your code here
+		return b; // TODO: change the return value	
+	}
+
+	public ImageAccess erosion(ImageAccess in, boolean b[][]) {
+		// TODO: Add your code here
+		return in; // TODO: change the return value	
+	}
+
+	public ImageAccess dilation(ImageAccess in, boolean b[][]) {
+		// TODO: Add your code here
+		return in; // TODO: change the return value	
+	}
+
+	public ImageAccess open(ImageAccess in, boolean b[][]) {
+		// TODO: Add your code here
+		return in; // TODO: change the return value	
+	}
+
+	public ImageAccess close(ImageAccess in, boolean b[][]) {
+		// TODO: Add your code here
+		return in; // TODO: change the return value	
+	}
+
+	public ImageAccess gradient(ImageAccess in, boolean b[][]) {
+		// TODO: Add your code here
+		return in; // TODO: change the return value	
+	}
+
+	public ImageAccess topHat(ImageAccess in, boolean b[][]) {
+		// TODO: Add your code here
+		return in; // TODO: change the return value	
+	}
+
+	public ImageAccess bottomHat(ImageAccess in, boolean b[][]) {
+		// TODO: Add your code here
+		return in; // TODO: change the return value	
+	}
+
+	// median operator
+	public ImageAccess median(ImageAccess in, boolean b[][]){
+		ImageAccess out = new ImageAccess(in.nx, in.ny);
+		int size = b.length;
+		for (int x=0; x<in.nx; x++)
+			for (int y=0; y<in.ny; y++){
+				double[][] block = in.getNeighborhood(x, y, size, size);
+				double arr[] = new double[size*size];
+				int count = 0;
+				for (int k=0; k<size; k++)
+					for (int l=0; l<size; l++)
+						if (b[k][l] == true && x>=k && y >= l
+								&& in.nx >= x+(size-1-k) && in.ny >= y+(size-1-l)){
+								arr[count] = block[k][l];
+								count += 1;
+						}
+						
+				Arrays.sort(arr);//sort is ascending
+				out.putPixel(x, y, arr[size*size-count/2-1]);
+			}
+		return out;
+	}
+	
+	public ImageAccess skeletonize(ImageAccess in){
+		ImageAccess out = new ImageAccess(in.nx, in.ny);
+		ImageAccess tmp1 = in; 
+		ImageAccess tmp2;
+		int count = 0;
+		
+		while(tmp1.getMaximum() > 0){
+			tmp1 = erosion(tmp1, cross(3));
+			tmp2 = topHat(tmp1,square(3));
+			
+			out.add(tmp2);
+			count ++;
+		}
+		
+		IJ.log(Integer.toString(count));
+		return out;
+	}
+	
+	public ImageAccess skeletonizeAndPrune(ImageAccess in, int m) {
+		// TODO: Add your code here
+		return in; // TODO: change the return value	
+	}
+}

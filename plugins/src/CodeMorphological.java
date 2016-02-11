@@ -1,0 +1,235 @@
+//=========================================================================================
+//
+// Title: Morphological Operators
+//
+// Author : Jun Lu
+//
+//=========================================================================================
+
+import ij.IJ;
+
+import java.util.Arrays;
+
+public class CodeMorphological {
+	
+	public ImageAccess erodeBug(ImageAccess image) {
+		boolean b[][] = square(3);
+		for (int x=0; x<image.nx; x++)
+		for (int y=0; y<image.nx; y++) {
+			double[][] block = image.getNeighborhood(x, y, 3, 3);
+			double min = Double.MAX_VALUE;
+			for (int k=0; k<3; k++)
+			for (int l=0; l<3; l++) {
+				if (b[k][l] == true)
+					min = Math.min(block[k][l], min);
+			}
+			image.putPixel(x, y, min);
+		}
+		return image;	
+	}
+	
+	// square element structure
+	public boolean[][] square(int size){
+		boolean b[][] = new boolean[size][size];
+		for(int x=0; x<size; x++){
+			for(int y=0; y<size; y++){
+				b[x][y] = true;
+			}
+		}
+		return b;
+	}
+	
+	// cross element structure
+	public boolean[][] cross(int size){
+		boolean b[][] = new boolean[size][size];
+		for(int x=0; x<size; x++){
+			for(int y=0; y<size; y++){
+				int index = size/2;
+				if(x==index || y==index)
+					b[x][y] = true;
+				else 
+					b[x][y] = false;
+			}
+		}
+		return b;
+	}
+	
+	// shift element structure
+	public boolean[][] shift(int size){
+		boolean b[][] = new boolean[size][size];
+		for(int x=0; x<size; x++){
+			for(int y=0; y<size; y++){
+				if(x==0 && y==0)
+					b[x][y] = true;
+				else 
+					b[x][y] = false;
+			}
+		}
+		return b;
+	}
+	
+	// disk element structure
+	public boolean[][] disk(int size){
+		boolean b[][] = new boolean[size][size];
+		int radius = (size-1)/2;
+		for(int x=0; x<size; x++){
+			for(int y=0; y<size; y++){
+				if((x-radius)*(x-radius)+(y-radius)*(y-radius) <= radius*radius)
+					b[x][y] = true;
+				else
+					b[x][y] = false;
+			}
+		}
+		return b;
+	}
+
+	// erosion operator
+	public ImageAccess erosion(ImageAccess in, boolean b[][]){
+		ImageAccess out = new ImageAccess(in.nx, in.ny);
+		int size = b.length;
+		for (int x=0; x<in.nx; x++){
+			for (int y=0; y<in.ny; y++){
+				double[][] block = in.getNeighborhood(x, y, size, size);
+				double min = Double.MAX_VALUE;
+				for (int k=0; k<size; k++)
+					for (int l=0; l<size; l++)
+						if (b[k][l] == true)
+							min = Math.min(block[k][l], min);
+				out.putPixel(x, y, min);
+			}
+		}
+		return out;
+	}
+
+	// dilation operator
+	public ImageAccess dilation(ImageAccess in, boolean b[][]){
+		ImageAccess out = new ImageAccess(in.nx, in.ny);
+		int size = b.length;
+		for (int x=0; x<in.nx; x++){
+			for (int y=0; y<in.ny; y++){
+				double[][] block = in.getNeighborhood(x, y, size, size);
+				double max = Double.MIN_VALUE;
+				for (int k=0; k<size; k++)
+					for (int l=0; l<size; l++)
+						if (b[size-k-1][size-l-1] == true)//reflect
+							max = Math.max(block[k][l], max);
+				out.putPixel(x, y, max);
+			}
+		}
+		return out;
+	}
+
+	// open operator
+	public ImageAccess open(ImageAccess in, boolean b[][]){
+		ImageAccess out = new ImageAccess(in.nx, in.ny);
+		out = erosion(in, b);
+		out = dilation(out, b);
+		return out;
+	}
+
+	// close operator
+	public ImageAccess close(ImageAccess in, boolean b[][]){
+		ImageAccess out = new ImageAccess(in.nx, in.ny);
+		out = dilation(in, b);
+		out = erosion(out, b);
+		return out;
+	}
+
+	// gradient operator
+	public ImageAccess gradient(ImageAccess in, boolean b[][]){
+		ImageAccess out = new ImageAccess(in.nx, in.ny);
+		ImageAccess tmp1 = dilation(in, b);
+		ImageAccess tmp2 = erosion(in, b);
+		
+		tmp1.subtract(tmp2);
+		out = tmp1;
+		return out;
+	}
+
+	// top hat operator
+	public ImageAccess topHat(ImageAccess in, boolean b[][]){
+		ImageAccess out = new ImageAccess(in.nx, in.ny);
+		ImageAccess tmp1 = open(in, b);
+		ImageAccess tmp2 = new ImageAccess(in.nx, in.ny);
+		for(int i=0; i<in.nx; i++){
+			for(int j=0; j<in.ny; j++)
+				tmp2.putPixel(i, j, in.getPixel(i, j));
+		}
+		tmp2.subtract(tmp1);
+		
+		out = tmp2;
+		return out;
+	}
+
+	// bottom hat operator
+	public ImageAccess bottomHat(ImageAccess in, boolean b[][]){
+		ImageAccess out = new ImageAccess(in.nx, in.ny);
+		ImageAccess tmp1 = close(in, b);
+		tmp1.subtract(in);
+		
+		out = tmp1; 
+		return out;
+	}
+
+	// median operator
+	public ImageAccess median(ImageAccess in, boolean b[][]){
+		ImageAccess out = new ImageAccess(in.nx, in.ny);
+		int size = b.length;
+		for (int x=0; x<in.nx; x++)
+			for (int y=0; y<in.ny; y++){
+				double[][] block = in.getNeighborhood(x, y, size, size);
+				double arr[] = new double[size*size];
+				int count = 0;
+				for (int k=0; k<size; k++)
+					for (int l=0; l<size; l++)
+						if (b[k][l] == true && x>=k && y >= l
+								&& in.nx >= x+(size-1-k) && in.ny >= y+(size-1-l)){
+								arr[count] = block[k][l];
+								count += 1;
+						}
+						
+				Arrays.sort(arr);//sort is ascending
+				out.putPixel(x, y, arr[size*size-count/2-1]);
+			}
+		return out;
+	}
+	
+	// algorithm of skeletonizing the image
+	public ImageAccess skeletonize(ImageAccess in){
+		ImageAccess out = new ImageAccess(in.nx, in.ny);
+		ImageAccess tmp1 = in; 
+		ImageAccess tmp2;
+		int count = 0;
+		
+		while(tmp1.getMaximum() > 0){
+			tmp1 = erosion(tmp1, cross(3));
+			tmp2 = topHat(tmp1, square(3));
+			
+			out.add(tmp2);
+			count ++;
+		}
+		
+		IJ.log(Integer.toString(count));
+		return out;
+	}
+	
+	// pruning algorithm of skeletonizing the image
+	public ImageAccess skeletonizeAndPrune(ImageAccess in, int m){
+		ImageAccess out = new ImageAccess(in.nx, in.ny);
+		ImageAccess tmp1 = in; 
+		ImageAccess tmp2;
+		int count = 0;
+		
+		while(tmp1.getMaximum() > 0){
+			tmp1 = erosion(tmp1, cross(3));
+			tmp2 = topHat(tmp1,square(3));
+			
+			count ++;
+			if(count >= m)
+				out.add(tmp2);
+		}
+		
+		IJ.log(Integer.toString(count));
+		return out;
+	}
+}

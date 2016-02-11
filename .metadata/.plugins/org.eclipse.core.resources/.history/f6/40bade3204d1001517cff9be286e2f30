@@ -1,0 +1,81 @@
+//=========================================================================
+//
+// Author : Daniel Sage
+// Biomedical Imaging Group (BIG)
+// Ecole Polytechnique Federale de Lausanne (EPFL)
+// Lausanne, Switzerland
+//
+// Information: http://bigwww.epfl.ch/iplab/
+//
+// Reference: D. Sage, M. Unser, 
+// "Teaching Image-Processing Programming in Java"
+// IEEE Signal Processing Magazine, vol. 20, pp. 43-52, November 2003.
+// no. 2, pp. 415-427, February 2010.
+//
+// Paper available: http://bigwww.epfl.ch/publications/sage0303.html
+//
+// Conditions of use:
+// You'll be free to use this software for research purposes, but you
+// should not redistribute it without our consent. In addition, we 
+// expect you to include a citation or acknowledgment whenever 
+// you present or publish results that are based on it.
+//
+//==========================================================================
+
+import java.awt.Canvas;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+
+public class StructuringElementCanvas extends Canvas {
+
+	private int sizeX = 3;
+	private int type = 0;
+	
+	public StructuringElementCanvas() {
+		super();
+		setSize(new Dimension(140, 140));
+		setBackground(new Color(150, 150, 150));
+	}
+	
+	public void repaint(int type, int size) {
+		this.type = type;
+		this.sizeX = size;
+		repaint();
+	}
+	
+	public boolean[][] getStructuringElement(int m) {
+ 
+		boolean se[][] = new boolean[m][m];
+		switch(type) {
+			case 0:	se = (new Code()).square(m); break;
+			case 1:	se = (new Code()).cross(m); break;
+			case 2:	se = (new Code()).disk(m); break;
+			case 3:	se = (new Code()).shift(m); break;
+		}
+		return se;
+	}
+	
+	public void paint(Graphics g) {
+		int m = sizeX;
+		boolean se[][] = getStructuringElement(m);
+		int s = Math.min(Math.round(140/m), Math.round(140/m));
+		int ox = (140 - m*s)/2;
+		int oy = (140 - m*s)/2;
+		g.setColor(Color.white);
+		for(int i=0; i<=m; i++)
+			g.drawLine(ox, oy+i*s, ox+s*m, oy+i*s);
+		for(int i=0; i<=m; i++)
+			g.drawLine(ox+i*s, oy, ox+i*s, oy+s*m);
+
+		for(int i=0; i<m; i++)
+		for(int j=0; j<m; j++) {
+			if (se[i][j])
+				g.setColor(Color.orange);
+			else
+				g.setColor(Color.black);
+			g.fillRect(ox+i*s+1, oy+j*s+1, s-2, s-2);
+		}
+	}
+	
+}

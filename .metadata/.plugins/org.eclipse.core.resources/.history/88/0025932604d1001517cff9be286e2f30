@@ -1,0 +1,46 @@
+//=========================================================================================
+//
+// Project: IP-LAB Developer Tools 2016 - Teaching Image-Processing Programming in Java
+//
+// Author : Daniel Sage, Biomedical Imaging Group (BIG), http://bigwww.epfl.ch/
+//
+// Organization: Ecole Polytechnique Federale de Lausanne (EPFL), Lausanne, Switzerland
+//
+// Information: http://bigwww.epfl.ch/iplab/
+//
+// Reference: D. Sage, M. Unser, "Teaching Image-Processing Programming in Java"
+// IEEE Signal Processing Magazine, vol. 20, pp. 43-52, November 2003.
+// http://bigwww.epfl.ch/publications/sage0303.html
+//
+// Conditions of use: You'll be free to use this software for research purposes, but you 
+// should not redistribute it without our consent. In addition, we expect you to include a
+// citation or acknowledgment whenever you present or publish results that are based on it.
+//
+//=========================================================================================
+
+import ij.IJ;
+import ij.gui.GenericDialog;
+import ij.plugin.PlugIn;
+
+public class Skeletonize_Prune implements PlugIn {
+
+	public void run(String args) {
+		ImageAccess image = new ImageAccess();
+		GenericDialog dialog = new GenericDialog("Skeletonization and pruning");
+		dialog.addNumericField("Pruning length", 3, 0);
+		dialog.showDialog();
+		if(dialog.wasCanceled())
+			return;
+		int m = (int)dialog.getNextNumber();
+		if (image.getMinimum() != 0) {
+			IJ.error("Only binary image (0/255)");
+			return;
+		}
+		if (image.getMaximum() != 255) {
+			IJ.error("Only binary image (0/255)");
+			return;
+		}
+		ImageAccess out = (new Code()).skeletonizeAndPrune(image, m);
+		out.show("Skeletonization and Pruning of " + image.getTitle());
+	}
+}
